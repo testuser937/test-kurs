@@ -13,6 +13,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Drawing;
+using System.Collections.ObjectModel;
 
 namespace TestKR
 {
@@ -57,6 +59,12 @@ namespace TestKR
             }
         }
 
+        public class NameIconPair
+        {
+            public string Name { get; set; }
+            public BitmapSource IconSource { get; set; }
+        }
+
         private void files_treeView_Expanded(object sender, RoutedEventArgs e)
         {
             TreeViewItem item = (TreeViewItem)e.OriginalSource;
@@ -71,22 +79,57 @@ namespace TestKR
                 dir = (DirectoryInfo)item.Tag;
             try
             {
+                ObservableCollection<NameIconPair> pairs = new ObservableCollection<NameIconPair>();
+
                 foreach (DirectoryInfo subDir in dir.GetDirectories())
                 {
                     TreeViewItem newItem = new TreeViewItem();
                     newItem.Tag = subDir;
-                    newItem.Header = subDir.ToString();
+                    newItem.Header = subDir;//.ToString();
                     newItem.Items.Add("*");
-                    foreach (FileInfo f in subDir.GetFiles())
-                    {
-                        newItem.Items.Add(f.Name);
-                    }
                     item.Items.Add(newItem);
                 }
+                
+
+                try
+                {
+                    foreach (FileInfo f in dir.GetFiles())
+                    {
+                        item.Items.Add(f);
+                        Icon icon = System.Drawing.Icon.ExtractAssociatedIcon(@"F:\Mooo\111.txt"); ;//System.Drawing.Icon.ExtractAssociatedIcon(f.Name);
+                        Stream stream = new MemoryStream();
+                        icon.Save(stream);
+                        BitmapDecoder decoder = IconBitmapDecoder.Create(stream, BitmapCreateOptions.None, BitmapCacheOption.None);
+                        BitmapSource src = decoder.Frames[0];
+                        pairs.Add(new NameIconPair() { Name = f.Name, IconSource = src });
+                        this.Icon = src;
+                    }
+                    this.DataContext = pairs;
+                    
+                }
+                catch { }
             }
-            catch
-            { }
+            catch (Exception ex)
+            {MessageBox.Show(ex.Message); }
+
         }
 
+        private void TreeViewItem_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+
+            TreeViewItem tvi = (TreeViewItem)sender;
+            e.Handled = true;
+            
+            
+                MessageBox.Show();
+            try
+            {
+                
+            }
+                //MessageBox.Show(tvi is FileInfo);
+            var a = (TreeViewItem)files_treeView.SelectedItem;
+           MessageBox.Show(a.Tag.ToString());
+            
+        }
     }
 }
