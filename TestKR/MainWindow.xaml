@@ -5,9 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TestKR"
         mc:Ignorable="d"
-        Title="Файловый менеджер" Height="350" Width="525">
+        Title="Файловый менеджер" Height="445" Width="413">
     <Grid>
-        <Label Content="Label" HorizontalAlignment="Left" Margin="39,37,0,0" VerticalAlignment="Top"/>
+        <TreeView x:Name="files_treeView" Margin="10,58,0,10" TreeViewItem.Expanded="files_treeView_Expanded" HorizontalAlignment="Left" Width="230"/>
+        <Grid HorizontalAlignment="Left" Height="43" Margin="10,10,0,0" VerticalAlignment="Top" Width="620">
+            <Button Content="&lt;&lt;" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="44"/>
+            <Button Content="&gt;&gt;" HorizontalAlignment="Left" Margin="69,10,0,13" Width="44"/>
+        </Grid>
 
     </Grid>
 </Window>
