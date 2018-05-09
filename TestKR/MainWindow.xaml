@@ -5,21 +5,47 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TestKR"
         mc:Ignorable="d"
-        Title="Файловый менеджер" Height="561" Width="826">
+        Title="Файловый менеджер" Height="561" Width="1056">
     <Grid>
-        <TreeView x:Name="files_treeView" Margin="10,58,0,10" TreeViewItem.Expanded="files_treeView_Expanded" HorizontalAlignment="Left" Width="294">
-
+        <TreeView x:Name="files_treeView" Margin="10,58,0,10" TreeViewItem.Expanded="files_treeView_Expanded" HorizontalAlignment="Left" Width="294" SelectedItemChanged="files_treeView_SelectedItemChanged" FontSize="13">
+            <!--
             <TreeView.ItemContainerStyle>
                 <Style TargetType="{x:Type TreeViewItem}">
                     <EventSetter Event="MouseLeftButtonUp" Handler="TreeViewItem_MouseLeftButtonUp"/>
                 </Style>
             </TreeView.ItemContainerStyle>
+            -->
         </TreeView>
         <Grid HorizontalAlignment="Left" Height="43" Margin="10,10,0,0" VerticalAlignment="Top" Width="620">
             <Button Content="&lt;&lt;" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="44"/>
             <Button Content="&gt;&gt;" HorizontalAlignment="Left" Margin="69,10,0,13" Width="44"/>
         </Grid>
-        <DataGrid HorizontalAlignment="Left" Height="462" Margin="360,58,0,0" VerticalAlignment="Top" Width="422"/>
+        <DataGrid x:Name="files_dataGrid" HorizontalAlignment="Left" 
+                  Height="462" Margin="360,58,0,0" 
+                  VerticalAlignment="Top" Width="678" 
+                  GridLinesVisibility="None" FontSize="13" SelectionChanged="files_dataGrid_SelectionChanged">
+
+            <DataGrid.Resources>
+                <ContextMenu x:Key="RowMenu" DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                    <MenuItem Header="Скопировать" Click="copy_MenuItem_clicked" Command="{Binding RowCopyCommand}" />
+                    <MenuItem Header="Переименовать" Click="rename_MenuItem_clciked" Command="{Binding RowRenameCommand}" />
+                    <MenuItem Header="Удалить" Click="delete_MenuItem_clicked" Command="{Binding RowDeleteCommand}" />
+                </ContextMenu>
+            </DataGrid.Resources>
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow" >
+                    <Setter Property="ContextMenu" Value="{StaticResource RowMenu}" />
+                </Style>
+            </DataGrid.RowStyle>
+
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Имя" IsReadOnly="True" Binding="{Binding Path=Name}" Width="200"></DataGridTextColumn>
+                <DataGridTextColumn Header="Дата изменения" IsReadOnly="True" Binding="{Binding Path=Date}"  Width="150"></DataGridTextColumn>
+                <DataGridTextColumn Header="Тип" IsReadOnly="True" Binding="{Binding Path=Type}"  Width="130"></DataGridTextColumn>
+                <DataGridTextColumn Header="Размер" IsReadOnly="True" Binding="{Binding Path=Size}"  ></DataGridTextColumn>
+            </DataGrid.Columns>
+
+        </DataGrid>
 
     </Grid>
 </Window>
