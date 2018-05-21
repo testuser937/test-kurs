@@ -8,26 +8,32 @@
         Title="Файловый менеджер" Height="561" Width="1056">
     <Grid>
         <TreeView x:Name="files_treeView" Margin="10,58,0,10" TreeViewItem.Expanded="files_treeView_Expanded" HorizontalAlignment="Left" Width="294" SelectedItemChanged="files_treeView_SelectedItemChanged" FontSize="13">
-            <!--
-            <TreeView.ItemContainerStyle>
-                <Style TargetType="{x:Type TreeViewItem}">
-                    <EventSetter Event="MouseLeftButtonUp" Handler="TreeViewItem_MouseLeftButtonUp"/>
-                </Style>
-            </TreeView.ItemContainerStyle>
-            -->
+
+            <TreeView.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{Binding IconSource}"/>
+                        <TextBlock Text="{Binding Name}"/>
+                    </StackPanel>
+                </DataTemplate>
+            </TreeView.ItemTemplate>
+            <TextBlock Height="100" TextWrapping="Wrap" Text="TextBlock" Width="100"/>
+
         </TreeView>
-        <Grid HorizontalAlignment="Left" Height="43" Margin="10,10,0,0" VerticalAlignment="Top" Width="620">
+        <Grid HorizontalAlignment="Left" Height="43" Margin="10,10,0,0" VerticalAlignment="Top" Width="1028">
             <Button Content="&lt;&lt;" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="44"/>
             <Button Content="&gt;&gt;" HorizontalAlignment="Left" Margin="69,10,0,13" Width="44"/>
+            <TextBox x:Name="dir_textBox" HorizontalAlignment="Left" Height="23" Margin="134,10,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="884"/>
         </Grid>
         <DataGrid x:Name="files_dataGrid" HorizontalAlignment="Left" 
                   Height="462" Margin="360,58,0,0" 
                   VerticalAlignment="Top" Width="678" 
-                  GridLinesVisibility="None" FontSize="13" SelectionChanged="files_dataGrid_SelectionChanged">
+                  GridLinesVisibility="None" FontSize="13" SelectionChanged="files_dataGrid_SelectionChanged" MouseDoubleClick="files_dataGrid_MouseDoubleClick">
 
             <DataGrid.Resources>
                 <ContextMenu x:Key="RowMenu" DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
                     <MenuItem Header="Скопировать" Click="copy_MenuItem_clicked" Command="{Binding RowCopyCommand}" />
+                    <MenuItem Header="Вставить" Click="paste_MenuItem_clicked" Command="{Binding RowCopyCommand}" />
                     <MenuItem Header="Переименовать" Click="rename_MenuItem_clciked" Command="{Binding RowRenameCommand}" />
                     <MenuItem Header="Удалить" Click="delete_MenuItem_clicked" Command="{Binding RowDeleteCommand}" />
                 </ContextMenu>
