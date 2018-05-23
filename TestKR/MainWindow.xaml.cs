@@ -1,5 +1,6 @@
 ﻿using Shell32;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Data;
@@ -22,10 +23,14 @@ namespace TestKR
         public static Folder RecyclingBin = shell.NameSpace(10);
         public string copyFolderName = "";
 
+        public Stack<string> back_stack = new Stack<string>();
+        public Stack<string> forward_stack = new Stack<string>();
         public MainWindow()
         {
             InitializeComponent();
             getDrives(); // загрузка списка дисков
+            back_btn.IsEnabled = false;
+            forward_btn.IsEnabled = false;
         }
 
 
@@ -70,6 +75,7 @@ namespace TestKR
             {
                 return; // при попытке раскрыть файл
             }
+            
             try
             {
                 foreach (DirectoryInfo subDir in dir.GetDirectories())
@@ -108,6 +114,7 @@ namespace TestKR
             catch (Exception ex)
             { }
 
+            
 
 
         }
@@ -137,7 +144,14 @@ namespace TestKR
                 else
                     dir = (DirectoryInfo)tvi.Tag;
 
+                back_stack.Push(dir_textBox.Text);
+                forward_stack.Clear();
+                forward_btn.IsEnabled = false;
+
                 dir_textBox.Text = dir.FullName;
+
+                
+                back_btn.IsEnabled = true;
 
                 DirectoryInfo[] dirs = null;
                 //попытка получить список подпапок
@@ -234,6 +248,7 @@ namespace TestKR
             }
             else
             {
+                copyFolderName = "";
                 StringCollection s = new StringCollection() { Path.Combine(dir_textBox.Text, row.Name)};
                 Clipboard.SetFileDropList(s);
             }
@@ -271,39 +286,47 @@ namespace TestKR
 
         private void getFoldersAndFiles(string path)
         {
-            DirectoryInfo dir = new DirectoryInfo(path);
-            FileInfo[] files = null;
-            DirectoryInfo[] dirs = null;
-            //попытка получить список подпапок
-            files_dataGrid.Items.Clear();
-
-            try
+            if (path == "")
             {
-                dirs = dir.GetDirectories();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
                 return;
             }
-            //добавляем в datagrid
-            foreach (DirectoryInfo subDir in dirs)
+            else
             {
-                var data = new ExplorerObject { Name = subDir.Name, Date = subDir.LastWriteTime.ToString(), Type = "Папка", Size = "" };
-                files_dataGrid.Items.Add(data);
-            }
+                DirectoryInfo dir = new DirectoryInfo(path);
+                FileInfo[] files = null;
+                DirectoryInfo[] dirs = null;
+                //попытка получить список подпапок
+                files_dataGrid.Items.Clear();
 
-            //попытка получить файлы
-            try
-            {
-                files = dir.GetFiles();
-            }
-            catch { }
 
-            foreach (FileInfo file in files)
-            {
-                var data = new ExplorerObject { Name = file.Name, Date = file.LastWriteTime.ToString(), Type = file.Extension, Size = SizeSuffix(file.Length) };
-                files_dataGrid.Items.Add(data);
+                try
+                {
+                    dirs = dir.GetDirectories();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    return;
+                }
+                //добавляем в datagrid
+                foreach (DirectoryInfo subDir in dirs)
+                {
+                    var data = new ExplorerObject { Name = subDir.Name, Date = subDir.LastWriteTime.ToString(), Type = "Папка", Size = "" };
+                    files_dataGrid.Items.Add(data);
+                }
+
+                //попытка получить файлы
+                try
+                {
+                    files = dir.GetFiles();
+                }
+                catch { }
+
+                foreach (FileInfo file in files)
+                {
+                    var data = new ExplorerObject { Name = file.Name, Date = file.LastWriteTime.ToString(), Type = file.Extension, Size = SizeSuffix(file.Length) };
+                    files_dataGrid.Items.Add(data);
+                }
             }
         }
 
@@ -313,16 +336,17 @@ namespace TestKR
             {
                 string dest_str = dir_textBox.Text;
                 var returnList = Clipboard.GetFileDropList();
+
+                string new_dest = Path.Combine(dest_str, copyFolderName);
                 if (copyFolderName!="")
                 {
-                    string new_dest = Path.Combine(dest_str, copyFolderName);
+                    //string new_dest = Path.Combine(dest_str, copyFolderName);
                     Directory.CreateDirectory(new_dest);
-                   
-                    foreach (var s in returnList)
-                    {
-                        FileInfo f = new FileInfo(s);
-                        File.Copy(s, Path.Combine(new_dest, f.Name));
-                    }
+                }
+                foreach (var s in returnList)
+                {
+                    FileInfo f = new FileInfo(s);
+                    File.Copy(s, Path.Combine(new_dest, f.Name));
                 }
                 getFoldersAndFiles(dir_textBox.Text);
             }
@@ -334,11 +358,56 @@ namespace TestKR
             string path = Path.Combine(dir_textBox.Text, row.Name);
             if (row.Type == "Папка")
             {
+                back_stack.Push(dir_textBox.Text);
                 dir_textBox.Text = path;
                 getFoldersAndFiles(path);
-
             }
             
+        }
+
+        private void back_btn_Click(object sender, RoutedEventArgs e)
+        {
+           if (back_stack.Count != 0)
+            {
+                forward_stack.Push(dir_textBox.Text);
+                string path = back_stack.Pop();
+
+                dir_textBox.Text = path;
+                files_dataGrid.Items.Clear();
+                getFoldersAndFiles(path);                
+                forward_btn.IsEnabled = true;
+                if (back_stack.Count == 0)
+                {
+                    back_btn.IsEnabled = false;
+                }
+            }
+            else
+            {
+                back_btn.IsEnabled = false;
+            }
+
+        }
+
+        private void forward_btn_Click(object sender, RoutedEventArgs e)
+        {
+            if (forward_stack.Count != 0)
+            {
+                back_stack.Push(dir_textBox.Text);
+                string path = forward_stack.Pop();
+                dir_textBox.Text = path;
+                files_dataGrid.Items.Clear();
+                getFoldersAndFiles(path);
+                //forward_btn.IsEnabled = false;
+                back_btn.IsEnabled = true;
+                if (forward_stack.Count == 0)
+                {
+                    forward_btn.IsEnabled = false;
+                }
+            }
+            else
+            {
+                forward_btn.IsEnabled = false;
+            }
         }
     }
 }
