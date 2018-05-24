@@ -25,10 +25,10 @@
             <Button x:Name="forward_btn" Content="&gt;&gt;" HorizontalAlignment="Left" Margin="69,10,0,13" Width="44" Click="forward_btn_Click"/>
             <TextBox x:Name="dir_textBox" HorizontalAlignment="Left" Height="23" Margin="134,10,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="884"/>
         </Grid>
-        <DataGrid x:Name="files_dataGrid" HorizontalAlignment="Left" 
-                  Height="462" Margin="333,58,0,0" 
-                  VerticalAlignment="Top" Width="705" 
-                  GridLinesVisibility="None" FontSize="13" SelectionChanged="files_dataGrid_SelectionChanged" MouseDoubleClick="files_dataGrid_MouseDoubleClick">
+        <DataGrid x:Name="files_dataGrid" 
+                  Height="462" Margin="333,58,10,0" 
+                  VerticalAlignment="Top" 
+                  GridLinesVisibility="None" FontSize="13" SelectionChanged="files_dataGrid_SelectionChanged" MouseDoubleClick="files_dataGrid_MouseDoubleClick" KeyDown="files_dataGrid_KeyDown" SelectedIndex="0">
 
             <DataGrid.Resources>
                 <ContextMenu x:Key="RowMenu" DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">

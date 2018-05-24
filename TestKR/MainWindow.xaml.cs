@@ -21,7 +21,6 @@ namespace TestKR
 
         public static Shell shell = new Shell();
         public static Folder RecyclingBin = shell.NameSpace(10);
-        public string copyFolderName = "";
 
         public Stack<string> back_stack = new Stack<string>();
         public Stack<string> forward_stack = new Stack<string>();
@@ -237,27 +236,81 @@ namespace TestKR
             string path = Path.Combine(dir_textBox.Text, row.Name);
             if (row.Type == "Папка")
             {
-                copyFolderName = row.Name;
+                
                 StringCollection paths = new StringCollection();
-                foreach (var s in System.IO.Directory.GetFiles(path))
-                {
-                    paths.Add(s);
-                }
+
+                paths.Add(path);
                 Clipboard.SetFileDropList(paths);
-                int a = 5;
             }
             else
             {
-                copyFolderName = "";
                 StringCollection s = new StringCollection() { Path.Combine(dir_textBox.Text, row.Name)};
                 Clipboard.SetFileDropList(s);
             }
         }
 
+        public void Paste(string dest)
+        {
+            foreach (string fileSystemObject in Clipboard.GetFileDropList())
+            {
+                CopyFileSystemObject(fileSystemObject, dest);
+            }
+        }
+        private void CopyFileSystemObject(string fileSystemObject, string destinationDirectory)
+        {
+            if (Directory.Exists(fileSystemObject))
+            {
+                string l_directoryName = Path.Combine(destinationDirectory, Path.GetFileName(fileSystemObject));
+                if (!Directory.Exists(l_directoryName))
+                {
+                    Directory.CreateDirectory(l_directoryName);
+                }
+                foreach (string l_fileSystemObject in Directory.GetFileSystemEntries(fileSystemObject))
+                {
+                    CopyFileSystemObject(l_fileSystemObject, l_directoryName);
+                }
+            }
+            else
+            {
+                File.Copy(fileSystemObject, Path.Combine(destinationDirectory, Path.GetFileName(fileSystemObject)), true);
+            }
+        }
+
         private void rename_MenuItem_clciked(object sender, RoutedEventArgs e)
         {
-           
+            ExplorerObject row = (ExplorerObject)files_dataGrid.SelectedItem;
+            renameObject a = new renameObject();
+            a.newname_TextBox.SelectionStart = 0;
+            a.newname_TextBox.SelectionLength = a.newname_TextBox.Text.Length;
+            a.newname_TextBox.SelectAll();
+            a.newname_TextBox.Text = row.Name;
+            a.btn.Click += (s, ee) =>
+            {
+                try
+                {
+                    if (row.Type != "Папка")
+                    {
 
+                        File.Move(Path.Combine(dir_textBox.Text, row.Name), Path.Combine(dir_textBox.Text, a.newname_TextBox.Text));
+
+
+                    }
+                    else
+                    {
+                        Directory.Move(Path.Combine(dir_textBox.Text, row.Name), Path.Combine(dir_textBox.Text, a.newname_TextBox.Text));
+
+
+                    }
+                    a.Close();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+                getFoldersAndFiles(dir_textBox.Text);
+
+            };
+            a.Show();
         }
 
         private void delete_MenuItem_clicked(object sender, RoutedEventArgs e)
@@ -271,6 +324,7 @@ namespace TestKR
             {
                 try
                 {
+                    
                     RecyclingBin.MoveHere(path);
                     MessageBox.Show("Перемещено в корзину!");
                     string dir_str = dir_textBox.Text;
@@ -292,6 +346,8 @@ namespace TestKR
             }
             else
             {
+
+                files_dataGrid.SelectedIndex = 0;
                 DirectoryInfo dir = new DirectoryInfo(path);
                 FileInfo[] files = null;
                 DirectoryInfo[] dirs = null;
@@ -336,18 +392,7 @@ namespace TestKR
             {
                 string dest_str = dir_textBox.Text;
                 var returnList = Clipboard.GetFileDropList();
-
-                string new_dest = Path.Combine(dest_str, copyFolderName);
-                if (copyFolderName!="")
-                {
-                    //string new_dest = Path.Combine(dest_str, copyFolderName);
-                    Directory.CreateDirectory(new_dest);
-                }
-                foreach (var s in returnList)
-                {
-                    FileInfo f = new FileInfo(s);
-                    File.Copy(s, Path.Combine(new_dest, f.Name));
-                }
+                Paste(dest_str);
                 getFoldersAndFiles(dir_textBox.Text);
             }
         }
@@ -409,5 +454,17 @@ namespace TestKR
                 forward_btn.IsEnabled = false;
             }
         }
+
+        private void files_dataGrid_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            ExplorerObject row = (ExplorerObject)files_dataGrid.SelectedItem;
+            if (e.Key == System.Windows.Input.Key.Space && row.Type == "Папка")
+            {
+                getFoldersAndFiles(Path.Combine(dir_textBox.Text, row.Name));
+                dir_textBox.Text = Path.Combine(dir_textBox.Text, row.Name);
+                
+            }
+        }
     }
 }
+
