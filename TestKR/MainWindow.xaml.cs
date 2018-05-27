@@ -1,13 +1,10 @@
 ﻿using Shell32;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Data;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media.Imaging;
 
 namespace TestKR
 {
@@ -30,16 +27,9 @@ namespace TestKR
             getDrives(); // загрузка списка дисков
             back_btn.IsEnabled = false;
             forward_btn.IsEnabled = false;
+            paste_Item.IsEnabled = false;
+
         }
-
-
-        public class NameIconPair
-        {
-            public String Name { get; set; }
-            public BitmapSource IconSource { get; set; }
-        }
-
-        ObservableCollection<NameIconPair> pairs = new ObservableCollection<NameIconPair>();
 
         private void getDrives()
         {
@@ -49,10 +39,7 @@ namespace TestKR
                 item.Tag = drive;
                 item.Header = drive.ToString();
                 item.Items.Add("*");
-                files_treeView.Items.Add(item);
-
-
-                
+                files_treeView.Items.Add(item);                
             }
         }
 
@@ -138,7 +125,6 @@ namespace TestKR
                 {
                     DriveInfo drive = (DriveInfo)tvi.Tag;
                     dir = drive.RootDirectory;
-                    //dir_textBox.Text = dir.FullName;
                 }
                 else
                     dir = (DirectoryInfo)tvi.Tag;
@@ -195,8 +181,7 @@ namespace TestKR
                 var data = new ExplorerObject { Name = file.Name, Date = file.LastWriteTime.ToString(), Type = file.Extension, Size = SizeSuffix(file.Length) };
                 files_dataGrid.Items.Add(data);
             }
-
-            //MessageBox.Show(tvi.HeaderStringFormat.ToString());
+            //files_dataGrid.Focus();
         }
 
         private static string SizeSuffix(Int64 value, int decimalPlaces = 1) // добавление суффикса в зависимости от размера файла
@@ -230,25 +215,6 @@ namespace TestKR
         {
         }
 
-        private void copy_MenuItem_clicked(object sender, RoutedEventArgs e)
-        {
-            ExplorerObject row = (ExplorerObject)files_dataGrid.SelectedItem;
-            string path = Path.Combine(dir_textBox.Text, row.Name);
-            if (row.Type == "Папка")
-            {
-                
-                StringCollection paths = new StringCollection();
-
-                paths.Add(path);
-                Clipboard.SetFileDropList(paths);
-            }
-            else
-            {
-                StringCollection s = new StringCollection() { Path.Combine(dir_textBox.Text, row.Name)};
-                Clipboard.SetFileDropList(s);
-            }
-        }
-
         public void Paste(string dest)
         {
             foreach (string fileSystemObject in Clipboard.GetFileDropList())
@@ -276,84 +242,21 @@ namespace TestKR
             }
         }
 
-        private void rename_MenuItem_clciked(object sender, RoutedEventArgs e)
-        {
-            ExplorerObject row = (ExplorerObject)files_dataGrid.SelectedItem;
-            renameObject a = new renameObject();
-            a.newname_TextBox.SelectionStart = 0;
-            a.newname_TextBox.SelectionLength = a.newname_TextBox.Text.Length;
-            a.newname_TextBox.SelectAll();
-            a.newname_TextBox.Text = row.Name;
-            a.btn.Click += (s, ee) =>
-            {
-                try
-                {
-                    if (row.Type != "Папка")
-                    {
 
-                        File.Move(Path.Combine(dir_textBox.Text, row.Name), Path.Combine(dir_textBox.Text, a.newname_TextBox.Text));
-
-
-                    }
-                    else
-                    {
-                        Directory.Move(Path.Combine(dir_textBox.Text, row.Name), Path.Combine(dir_textBox.Text, a.newname_TextBox.Text));
-
-
-                    }
-                    a.Close();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
-                getFoldersAndFiles(dir_textBox.Text);
-
-            };
-            a.Show();
-        }
-
-        private void delete_MenuItem_clicked(object sender, RoutedEventArgs e)
-        {
-           // DataGrid dg = sender as DataGrid;
-            ExplorerObject row = (ExplorerObject)files_dataGrid.SelectedItem;
-            string path = Path.Combine(dir_textBox.Text,row.Name);
-
-            MessageBoxResult result = MessageBox.Show("Вы действительно хотите удалить объект?", "Подтверждение", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (result == MessageBoxResult.Yes)
-            {
-                try
-                {
-                    
-                    RecyclingBin.MoveHere(path);
-                    MessageBox.Show("Перемещено в корзину!");
-                    string dir_str = dir_textBox.Text;
-                    getFoldersAndFiles(dir_str);
-                }
-                catch (System.IO.IOException ee)
-                {
-                    MessageBox.Show(ee.Message);
-                    return;
-                }
-            }           
-        }
 
         private void getFoldersAndFiles(string path)
         {
+            files_dataGrid.Items.Clear();
             if (path == "")
             {
                 return;
             }
             else
             {
-
-                files_dataGrid.SelectedIndex = 0;
                 DirectoryInfo dir = new DirectoryInfo(path);
                 FileInfo[] files = null;
                 DirectoryInfo[] dirs = null;
                 //попытка получить список подпапок
-                files_dataGrid.Items.Clear();
-
 
                 try
                 {
@@ -383,17 +286,8 @@ namespace TestKR
                     var data = new ExplorerObject { Name = file.Name, Date = file.LastWriteTime.ToString(), Type = file.Extension, Size = SizeSuffix(file.Length) };
                     files_dataGrid.Items.Add(data);
                 }
-            }
-        }
-
-        private void paste_MenuItem_clicked(object sender, RoutedEventArgs e)
-        {
-            if (Clipboard.ContainsFileDropList())
-            {
-                string dest_str = dir_textBox.Text;
-                var returnList = Clipboard.GetFileDropList();
-                Paste(dest_str);
-                getFoldersAndFiles(dir_textBox.Text);
+                files_dataGrid.SelectedIndex = 0;
+                files_dataGrid.Focus();
             }
         }
 
@@ -418,7 +312,6 @@ namespace TestKR
                 string path = back_stack.Pop();
 
                 dir_textBox.Text = path;
-                files_dataGrid.Items.Clear();
                 getFoldersAndFiles(path);                
                 forward_btn.IsEnabled = true;
                 if (back_stack.Count == 0)
@@ -460,9 +353,121 @@ namespace TestKR
             ExplorerObject row = (ExplorerObject)files_dataGrid.SelectedItem;
             if (e.Key == System.Windows.Input.Key.Space && row.Type == "Папка")
             {
+                forward_stack.Clear();
+                back_btn.IsEnabled = true;
+                back_stack.Push(dir_textBox.Text);
                 getFoldersAndFiles(Path.Combine(dir_textBox.Text, row.Name));
                 dir_textBox.Text = Path.Combine(dir_textBox.Text, row.Name);
-                
+                //if (back_stack.Count == 0)
+                //{
+                //    back_btn.IsEnabled = false;
+                //}
+            }
+            if(e.Key == System.Windows.Input.Key.Back && back_stack.Count != 0)
+            {
+                forward_btn.IsEnabled = true;
+                forward_stack.Push(dir_textBox.Text);
+                string path = back_stack.Pop();
+                getFoldersAndFiles(path);
+                dir_textBox.Text = path;
+                if (back_stack.Count == 0)
+                {
+                    back_btn.IsEnabled = false;
+                }
+            }
+            if(e.Key == System.Windows.Input.Key.F5)
+            {
+                getFoldersAndFiles(dir_textBox.Text);
+            }
+        }
+
+        private void copy_Menu(object sender, RoutedEventArgs e)
+        {
+            ExplorerObject row = (ExplorerObject)files_dataGrid.SelectedItem;
+            if (row != null)
+            {
+                string path = Path.Combine(dir_textBox.Text, row.Name);
+                StringCollection paths = new StringCollection();
+                paths.Add(path);
+                Clipboard.SetFileDropList(paths);
+                paste_Item.IsEnabled = true;
+            }
+        }
+
+        private void paste_Menu(object sender, RoutedEventArgs e)
+        {
+            if (Clipboard.ContainsFileDropList())
+            {
+                string dest_str = dir_textBox.Text;
+                var returnList = Clipboard.GetFileDropList();
+                Paste(dest_str);
+                getFoldersAndFiles(dir_textBox.Text);
+            }
+        }
+
+        private void delete_Menu(object sender, RoutedEventArgs e)
+        {
+            ExplorerObject row = (ExplorerObject)files_dataGrid.SelectedItem;
+            if (row != null)
+            {
+                string path = Path.Combine(dir_textBox.Text, row.Name);
+                MessageBoxResult result = MessageBox.Show("Вы действительно хотите удалить объект?", "Подтверждение", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (result == MessageBoxResult.Yes)
+                {
+                    try
+                    {
+
+                        RecyclingBin.MoveHere(path);
+                        MessageBox.Show("Перемещено в корзину!");
+                        string dir_str = dir_textBox.Text;
+                        getFoldersAndFiles(dir_str);
+                    }
+                    catch (IOException ee)
+                    {
+                        MessageBox.Show(ee.Message);
+                        return;
+                    }
+                }
+            }
+        }
+
+        private void rename_Menu(object sender, RoutedEventArgs e)
+        {
+            ExplorerObject row = (ExplorerObject)files_dataGrid.SelectedItem;
+            if (row != null)
+            {
+                renameObject a = new renameObject();
+                a.newname_TextBox.SelectionStart = 0;
+                a.newname_TextBox.SelectionLength = a.newname_TextBox.Text.Length;
+                a.newname_TextBox.SelectAll();
+                a.newname_TextBox.Text = row.Name;
+                a.btn.Click += (s, ee) =>
+                {
+                    try
+                    {
+                        if (row.Type != "Папка")
+                        {
+
+                            File.Move(Path.Combine(dir_textBox.Text, row.Name), Path.Combine(dir_textBox.Text, a.newname_TextBox.Text));
+
+
+                        }
+                        else
+                        {
+                            Directory.Move(Path.Combine(dir_textBox.Text, row.Name), Path.Combine(dir_textBox.Text, a.newname_TextBox.Text));
+
+
+                        }
+                        a.Close();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message);
+                    }
+                    getFoldersAndFiles(dir_textBox.Text);
+
+                };
+                a.Show();
             }
         }
     }

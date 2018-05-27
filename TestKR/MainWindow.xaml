@@ -23,26 +23,22 @@
         <Grid HorizontalAlignment="Left" Height="43" Margin="10,10,0,0" VerticalAlignment="Top" Width="1028">
             <Button x:Name="back_btn" Content="&lt;&lt;" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="44" Click="back_btn_Click"/>
             <Button x:Name="forward_btn" Content="&gt;&gt;" HorizontalAlignment="Left" Margin="69,10,0,13" Width="44" Click="forward_btn_Click"/>
-            <TextBox x:Name="dir_textBox" HorizontalAlignment="Left" Height="23" Margin="134,10,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="884"/>
+            <TextBox x:Name="dir_textBox" HorizontalAlignment="Left" Height="23" Margin="134,10,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="884" AllowDrop="False" IsReadOnly="True" IsTabStop="False"/>
         </Grid>
         <DataGrid x:Name="files_dataGrid" 
                   Height="462" Margin="333,58,10,0" 
                   VerticalAlignment="Top" 
                   GridLinesVisibility="None" FontSize="13" SelectionChanged="files_dataGrid_SelectionChanged" MouseDoubleClick="files_dataGrid_MouseDoubleClick" KeyDown="files_dataGrid_KeyDown" SelectedIndex="0">
 
-            <DataGrid.Resources>
-                <ContextMenu x:Key="RowMenu" DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
-                    <MenuItem Header="Скопировать" Click="copy_MenuItem_clicked" Command="{Binding RowCopyCommand}" />
-                    <MenuItem Header="Вставить" Click="paste_MenuItem_clicked" Command="{Binding RowCopyCommand}" />
-                    <MenuItem Header="Переименовать" Click="rename_MenuItem_clciked" Command="{Binding RowRenameCommand}" />
-                    <MenuItem Header="Удалить" Click="delete_MenuItem_clicked" Command="{Binding RowDeleteCommand}" />
+            <DataGrid.ContextMenu>
+                <ContextMenu >
+                    <MenuItem x:Name="copy_Item" Header="Скопировать" Click="copy_Menu" />
+                    <MenuItem x:Name="paste_Item" Header="Вставить" Click="paste_Menu"/>
+                    <MenuItem x:Name="delete_Item" Header="Удалить" Click="delete_Menu"/>
+                    <MenuItem x:Name="rename_Item" Header="Переименовать" Click="rename_Menu"/>
+
                 </ContextMenu>
-            </DataGrid.Resources>
-            <DataGrid.RowStyle>
-                <Style TargetType="DataGridRow" >
-                    <Setter Property="ContextMenu" Value="{StaticResource RowMenu}" />
-                </Style>
-            </DataGrid.RowStyle>
+            </DataGrid.ContextMenu>
 
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Имя" IsReadOnly="True" Binding="{Binding Path=Name}" Width="200"></DataGridTextColumn>
